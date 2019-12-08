@@ -25,6 +25,6 @@ jobs:
           collation server: 'utf8_general_ci'
           mysql version: '8.0'
           mysql database: 'db'
-
+          mysql root password: ''
       - name: Run test suite
         run: composer run-script test
