@@ -210,8 +210,8 @@ final class UsageOfDbFixturesTraitTest extends \PHPUnit\Framework\TestCase
     }
 
     public function testErrorInFixturesWithMongo() {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessageMatches('/Illegal fixtures/');
+        $this->expectException(\MongoDB\Driver\Exception\UnexpectedValueException::class);
+        $this->expectExceptionMessageMatches('/Got parse error at "}", position 59: "VALUE_EXPECTED"/');
         $this->loadFixtures(
             'mongo',
             $this->getAbsolutePathToFixture('fixtures_with_error.json')

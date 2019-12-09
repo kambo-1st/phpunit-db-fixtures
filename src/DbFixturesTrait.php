@@ -3,6 +3,8 @@
 namespace IW\PHPUnit\DbFixtures;
 
 use Symfony\Component\Yaml\Yaml;
+use function MongoDB\BSON\fromJSON;
+use function MongoDB\BSON\toPHP;
 
 trait DbFixturesTrait
 {
@@ -110,20 +112,10 @@ trait DbFixturesTrait
         }
 
         foreach ($filenames as $filename) {
-            if (!is_array($testData = Json::decode(
-                file_get_contents($filename), true))
-            ) {
-                throw new \InvalidArgumentException(
-                    sprintf(
-                        'Illegal fixtures %s' . PHP_EOL . 'json_decode: %s',
-                        $filename,
-                        json_last_error_msg()
-                    )
-                );
-            }
+            $testData = $this->removeInlineJsonComments(file_get_contents($filename));
 
             //transform data into JSONP format which can handle advanced types (eg. MongoId, MongoDate, etc.)
-            Json::jsonToJsonp($testData);
+            $testData = toPHP(fromJSON($testData));
 
             if (strpos($filename, '.meta') !== false) {
                 foreach ($testData as $collectionName => $config) {
@@ -143,6 +135,22 @@ trait DbFixturesTrait
                 }
             }
         }
+    }
+
+    private function removeInlineJsonComments($jsonString) : string {
+        $json = '';
+        foreach (explode("\n", $jsonString) as $line) {
+            // remove inline comments ( // some comment)
+            // test whether comment starts at the beginning of the line or there can be spaces and after them must be
+            // the slashes (//)
+            if (preg_match('#^ *//.*#', $line)) {
+                continue;
+            }
+
+            $json .= $line;
+        }
+
+        return $json;
     }
 
     private function loadFixturesPdo($connection, string ...$filenames) {
